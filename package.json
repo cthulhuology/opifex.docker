@@ -1,0 +1,21 @@
+{
+	"author": "David Goehrig",
+	"name": "opifex.docker",
+	"license" : "MIT",
+	"description": "Manages docker.io containers using AMQP",
+	"version": "0.0.1",
+	"repository": {
+		"url": "http://github.com/cthulhuology/opifex.docker"
+	},
+	"main": "./lib/Docker.coffee",
+	"bin": {},
+	"dependencies": {
+		"opifex" : ">=0.0.8"
+	},
+	"devDependencies": {},
+	"optionalDependencies": {},
+	"engines": {
+		"node": "*"
+	}
+}
+
