@@ -3,7 +3,7 @@
 	"name": "opifex.docker",
 	"license" : "MIT",
 	"description": "Manages docker.io containers using AMQP",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": {
 		"url": "http://github.com/cthulhuology/opifex.docker"
 	},

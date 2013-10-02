@@ -9,50 +9,45 @@ spawn = (require 'child_process').spawn
 Docker = () ->
 	self = this
 	exec = (command, args...) ->
+		out = ''
+		err = ''
+		console.log "$ #{command} #{args}"
 		proc = spawn(command,args)
 		proc.stdout.on 'data', (data) ->
-			self.send [ "stdout", data ]
+			out = "#{out}#{data}"
 		proc.stderr.on 'data', (data) ->
-			self.send [ "stdout", data ]
-		proc.on 'close', (code) ->
+			err = "#{err}#{data}"
+		proc.on 'exit', (code) ->
 			if code == 0
-				self.send [ "ok" ]
+				console.log out
+				self.send [ "ok", out, err ]
 			else
-				self.send [ "error", code ]
+				console.log err
+				self.send [ "error", "#{code}", err ]
 	this.run = (tag) ->
-		if tag.match(/^\S+$/)
-			exec "docker", "run", "-i","-d","-t", tag
+		exec "docker", "run", "-i","-d","-t", tag
 	this.start = (container) ->
-		if container.match(/^\S+$/)
-			exec "docker", "start", container
+		exec "docker", "start", container
 	this.stop = (container) ->
-		if container.match(/^\S+$/)
-			exec "docker", "stop", container
+		exec "docker", "stop", container
 	this.restart = (container) ->
-		if container.match(/^\S+$/)
-			exec "docker", "restart", container
+		exec "docker", "restart", container
 	this.images = () ->
 		exec "docker", "images"
-	this.containers = (all) ->
-		if all
-			exec "docker", "ps", "-a"
-		else
-			exec "docker", "ps"
+	this.ps = () ->
+		exec "docker", "ps"
+	this.containers = () ->
+		exec "docker", "ps", "-a"
 	this.remove = (tag) ->
-		if tag.match(/^\S+$/)
-			exec "docker", "rm", tag
+		exec "docker", "rm", tag
 	this.remove_image = (tag) ->
-		if tag.match(/^\S+$/)
-			exec "docker", "rmi", tag
+		exec "docker", "rmi", tag
 	this.pull = (tag) ->
-		if tag.match(/^\S+$/)
-			exec "docker", "pull", tag
+		exec "docker", "pull", tag
 	this.push = (tag) ->
-		if tag.match(/^\S+$/)
-			exec "docker", "push", tag
+		exec "docker", "push", tag
 	this.commit = (container,tag) ->
-		if tag.match(/^\S+$/) and container.match(/^\S+$/)
-			exec "docker", "commit", container, tag
+		exec "docker", "commit", container, tag
 	this.info = () ->
 		exec "docker", "info"
 
