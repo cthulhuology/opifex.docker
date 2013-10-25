@@ -4,52 +4,80 @@
 #
 
 os = require 'os'
-spawn = (require 'child_process').spawn
+http = require 'http'
+
+crud = (method,self) ->
+	(command, path,data) ->
+		block = []
+		req = http.request { hostname: 'localhost', port: 5678, path: path, method: method, headers: { "Content-Type": "application/json", "Content-Length" : data && data.length || 0 }}, (res) ->
+			res.setEncoding 'utf8'
+			res.on 'data', (chunk) ->
+				block.push(chunk)
+			res.on 'end', () ->
+				self.send [ command, os.hostname(), res.statusCode, block.join('') ]
+		if data && data.length
+			req.write(data)
+		req.end()
 
 Docker = () ->
 	self = this
-	exec = (command, args...) ->
-		out = ''
-		err = ''
-		console.log "$ #{command} #{args}"
-		proc = spawn(command,args)
-		proc.stdout.on 'data', (data) ->
-			out = "#{out}#{data}"
-		proc.stderr.on 'data', (data) ->
-			err = "#{err}#{data}"
-		proc.on 'exit', (code) ->
-			if code == 0
-				console.log out
-				self.send [ "ok", out, err ]
-			else
-				console.log err
-				self.send [ "error", "#{code}", err ]
+	Get = crud 'GET', self
+	Post = crud 'POST', self
+	Put = crud 'PUT', self
+	Delete = crud 'DELETE', self
 	this.run = (tag) ->
-		exec "docker", "run", "-i","-d","-t", tag
+		Post "run", "/containers/create",
+			"Hostname":"",
+			"User":"",
+			"Memory":0,
+			"MemorySwap":0,
+			"AttachStdin":false,
+			"AttachStdout":false,
+			"AttachStderr":false,
+			"PortSpecs":null,
+			"Privileged": false,
+			"Tty":false,
+			"OpenStdin":false,
+			"StdinOnce":false,
+			"Env":null,
+			"Cmd":null,
+			"Dns":null,
+			"Image": tag,
+			"Volumes":{},
+			"VolumesFrom":"",
+			"WorkingDir":""
 	this.start = (container) ->
-		exec "docker", "start", container
+		Post "start", "/containers/#{container}/start",'{}'
 	this.stop = (container) ->
-		exec "docker", "stop", container
+		Post "stop", "/containers/#{container}/stop"
 	this.restart = (container) ->
-		exec "docker", "restart", container
-	this.images = () ->
-		exec "docker", "images"
-	this.ps = () ->
-		exec "docker", "ps"
+		Post "restart", "/containers/#{container}/restart"
+	this.running = () ->
+		Get "running", "/containers/json?all=0"
 	this.containers = () ->
-		exec "docker", "ps", "-a"
+		Get "containers", "/containers/json?all=1"
+	this.info = (container) ->
+		Get "info", "/containers/#{container}/json"
+	this.top = (container) ->
+		Get "top", "/containers/#{container}/top"
+	this.changes = (container) ->
+		Get "top", "/containers/#{container}/changes"
+	this.kill = (container) ->
+		Get "kill", "/containers/#{container}/kill"
 	this.remove = (tag) ->
-		exec "docker", "rm", tag
-	this.remove_image = (tag) ->
-		exec "docker", "rmi", tag
-	this.pull = (tag) ->
-		exec "docker", "pull", tag
-	this.push = (tag) ->
-		exec "docker", "push", tag
-	this.commit = (container,tag) ->
-		exec "docker", "commit", container, tag
-	this.info = () ->
-		exec "docker", "info"
+		Delete "remove", "/containers/#{tag}"
+	this.images = () ->
+		Get "images", "/images/json?all=1"
+	this.remove_image = (image) ->
+		Delete "remove_image", "/images/#{image}"
+	this.image_info = (image) ->
+		Get "image_info", "/images/#{image}/json"
+	this.pull = (image) ->
+		Post "pull", "/images/create?fromImage=#{image}"
+	this.push = (image,repo) ->
+		Post "push", "/images/#{image}/push?registry=#{repo}"
+	this.commit = (container,tag,repo,run) ->
+		Post "commit", "/commit?container=#{container}&tag=#{tag}&repo=#{repo}&run=#{run}"
 
 	this["*"] = (message...) ->
 		console.log  "Unknown mesage #{JSON.stringify(message)}"
