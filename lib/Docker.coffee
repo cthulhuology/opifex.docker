@@ -14,7 +14,7 @@ crud = (method,self) ->
 			res.on 'data', (chunk) ->
 				block.push(chunk)
 			res.on 'end', () ->
-				self.send [ command, os.hostname(), res.statusCode, block.join('') ]
+				self.send [ command, os.hostname(), res.statusCode, JSON.parse(block.join('')) ]
 		if data && data.length
 			req.write(data)
 		req.end()
@@ -25,27 +25,27 @@ Docker = () ->
 	Post = crud 'POST', self
 	Put = crud 'PUT', self
 	Delete = crud 'DELETE', self
-	this.run = (tag) ->
-		Post "run", "/containers/create",
+	this.run = (tag,cmd,ports,env) ->
+		Post "run", "/containers/create", JSON.stringify(
 			"Hostname":"",
 			"User":"",
 			"Memory":0,
 			"MemorySwap":0,
-			"AttachStdin":false,
-			"AttachStdout":false,
-			"AttachStderr":false,
-			"PortSpecs":null,
+			"AttachStdin":true,
+			"AttachStdout":true,
+			"AttachStderr":true,
+			"PortSpecs": ports || null,
 			"Privileged": false,
-			"Tty":false,
-			"OpenStdin":false,
+			"Tty":true,
+			"OpenStdin":true,
 			"StdinOnce":false,
-			"Env":null,
-			"Cmd":null,
+			"Env": env || null,
+			"Cmd": cmd || null,
 			"Dns":null,
 			"Image": tag,
 			"Volumes":{},
 			"VolumesFrom":"",
-			"WorkingDir":""
+			"WorkingDir":"")
 	this.start = (container) ->
 		Post "start", "/containers/#{container}/start",'{}'
 	this.stop = (container) ->
@@ -63,7 +63,7 @@ Docker = () ->
 	this.changes = (container) ->
 		Get "top", "/containers/#{container}/changes"
 	this.kill = (container) ->
-		Get "kill", "/containers/#{container}/kill"
+		Post "kill", "/containers/#{container}/kill"
 	this.remove = (tag) ->
 		Delete "remove", "/containers/#{tag}"
 	this.images = () ->
