@@ -14,7 +14,8 @@ crud = (method,self) ->
 			res.on 'data', (chunk) ->
 				block.push(chunk)
 			res.on 'end', () ->
-				self.send [ command, os.hostname(), res.statusCode, JSON.parse(block.join('')) ]
+				console.log 'sending', [ 'docker', command, os.hostname(), res.statusCode, JSON.parse(block.join('')) ]
+				self.send [ 'docker', command, os.hostname(), res.statusCode, JSON.parse(block.join('')) ]
 		if data && data.length
 			req.write(data)
 		req.end()
