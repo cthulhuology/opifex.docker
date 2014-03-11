@@ -26,9 +26,9 @@ Docker = () ->
 	Post = crud 'POST', self
 	Put = crud 'PUT', self
 	Delete = crud 'DELETE', self
-	this.run = (tag,cmd,ports,env) ->
+	this.run = (hostname,tag,cmd,ports,env,dns) ->
 		Post "run", "/containers/create", JSON.stringify(
-			"Hostname":"",
+			"Hostname": hostname || "",
 			"User":"",
 			"Memory":0,
 			"MemorySwap":0,
@@ -42,7 +42,7 @@ Docker = () ->
 			"StdinOnce":false,
 			"Env": env || null,
 			"Cmd": cmd || null,
-			"Dns":null,
+			"Dns": dns || null,
 			"Image": tag,
 			"Volumes":{},
 			"VolumesFrom":"",
