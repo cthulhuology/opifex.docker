@@ -7,9 +7,9 @@ os = require 'os'
 http = require 'http'
 
 crud = (method,self) ->
-	(command, path,data) ->
+	(command, hostname, path, data) ->
 		block = []
-		req = http.request { hostname: 'localhost', port: 5678, path: path, method: method, headers: { "Content-Type": "application/json", "Content-Length" : data && data.length || 0 }}, (res) ->
+		req = http.request { hostname: hostname, port: 5678, path: path, method: method, headers: { "Content-Type": "application/json", "Content-Length" : data && data.length || 0 }}, (res) ->
 			res.setEncoding 'utf8'
 			res.on 'data', (chunk) ->
 				block.push(chunk)
@@ -27,7 +27,7 @@ Docker = () ->
 	Put = crud 'PUT', self
 	Delete = crud 'DELETE', self
 	this.run = (hostname,tag,cmd,ports,env,dns) ->
-		Post "run", "/containers/create", JSON.stringify(
+		Post "run", hostname, "/containers/create", JSON.stringify(
 			"Hostname": hostname || "",
 			"User":"",
 			"Memory":0,
@@ -47,38 +47,38 @@ Docker = () ->
 			"Volumes":{},
 			"VolumesFrom":"",
 			"WorkingDir":"")
-	this.start = (container) ->
-		Post "start", "/containers/#{container}/start",'{}'
-	this.stop = (container) ->
-		Post "stop", "/containers/#{container}/stop"
-	this.restart = (container) ->
-		Post "restart", "/containers/#{container}/restart"
-	this.running = () ->
-		Get "running", "/containers/json?all=0"
-	this.containers = () ->
-		Get "containers", "/containers/json?all=1"
-	this.info = (container) ->
-		Get "info", "/containers/#{container}/json"
-	this.top = (container) ->
-		Get "top", "/containers/#{container}/top"
-	this.changes = (container) ->
-		Get "top", "/containers/#{container}/changes"
-	this.kill = (container) ->
-		Post "kill", "/containers/#{container}/kill"
-	this.remove = (tag) ->
-		Delete "remove", "/containers/#{tag}"
-	this.images = () ->
-		Get "images", "/images/json?all=1"
-	this.remove_image = (image) ->
-		Delete "remove_image", "/images/#{image}"
-	this.image_info = (image) ->
-		Get "image_info", "/images/#{image}/json"
-	this.pull = (image) ->
-		Post "pull", "/images/create?fromImage=#{image}"
-	this.push = (image,repo) ->
-		Post "push", "/images/#{image}/push?registry=#{repo}"
-	this.commit = (container,tag,repo,run) ->
-		Post "commit", "/commit?container=#{container}&tag=#{tag}&repo=#{repo}&run=#{run}"
+	this.start = (hostname, container) ->
+		Post "start", hostname "/containers/#{container}/start",'{}'
+	this.stop = (hostname, container) ->
+		Post "stop", hostname, "/containers/#{container}/stop"
+	this.restart = (hostname, container) ->
+		Post "restart", hostname, "/containers/#{container}/restart"
+	this.running = (hostname) ->
+		Get "running", hostname, "/containers/json?all=0"
+	this.containers = (hostname) ->
+		Get "containers", hostname, "/containers/json?all=1"
+	this.info = (hostname,container) ->
+		Get "info", hostname,"/containers/#{container}/json"
+	this.top = (hostname,container) ->
+		Get "top", hostname, "/containers/#{container}/top"
+	this.changes = (hostname,container) ->
+		Get "top", hostname, "/containers/#{container}/changes"
+	this.kill = (hostname,container) ->
+		Post "kill", hostname, "/containers/#{container}/kill"
+	this.remove = (hostname, tag) ->
+		Delete "remove", hostname, "/containers/#{tag}"
+	this.images = (hostname) ->
+		Get "images", hostname, "/images/json?all=1"
+	this.remove_image = (hostname, image) ->
+		Delete "remove_image", hostname, "/images/#{image}"
+	this.image_info = (hostname, image) ->
+		Get "image_info", hostname, "/images/#{image}/json"
+	this.pull = (hostname, image) ->
+		Post "pull", hostname, "/images/create?fromImage=#{image}"
+	this.push = (hostname, image,repo) ->
+		Post "push", hostname, "/images/#{image}/push?registry=#{repo}"
+	this.commit = (hostname, container,tag,repo,run) ->
+		Post "commit", hostname, "/commit?container=#{container}&tag=#{tag}&repo=#{repo}&run=#{run}"
 
 	this["*"] = (message...) ->
 		console.log  "Unknown mesage #{JSON.stringify(message)}"
